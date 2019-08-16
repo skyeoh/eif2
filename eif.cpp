@@ -180,6 +180,73 @@ Node iTree::make_tree (double* X_in, int size_in, int e_in)
 }
 
 
+/*************************
+        Class Path
+ *************************/
+class Path
+{
+
+    private:
+	std::vector<char> path_list;
+	int dim;
+	double* x;
+	double e;
+	double pathlength;
+    public:
+	Path (int, double*, iTree);
+	~Path ();
+	double find_path (Node);
+
+};
+
+Path::Path (int dim_in, double* x_in, iTree itree_in)
+{
+
+	dim = dim_in;
+	x = x_in;
+	e = 0.0;
+	pathlength = find_path (itree_in.root);
+
+}
+
+Path::~Path ()
+{
+
+}
+
+double Path::find_path (Node node_in)
+{
+
+	if (node_in.node_type == "exNode") {
+
+		if (node_in.size <= 1) {
+			return e;
+		} else {
+			e = e + c_factor (node_in.size);
+			return e;
+		}
+
+	} else {
+
+		e += 1.0;
+
+		double xdotn, pdotn, plength;
+		pdotn = inner_product (&node_in.point[0], &node_in.normal_vector[0], dim);
+		xdotn = inner_product (x, &node_in.normal_vector[0], dim);
+		if (xdotn < pdotn) {
+			path_list.push_back('L');
+			plength = find_path (node_in.left);
+		} else {
+			path_list.push_back('R');
+			plength = find_path (node_in.right);
+		}
+		return plength;
+
+	}
+
+}
+
+
 /****************************
         Class iForest
  ****************************/
@@ -201,7 +268,7 @@ class iForest
 	~iForest ();
 	void CheckExtensionLevel ();
 	void fit ();
-	void predict ();
+	void predict (double*, int, double*);
 
 };
 
@@ -253,7 +320,26 @@ void iForest::fit ()
 
 }
 
-void iForest::predict ()
+void iForest::predict (double* X_in=NULL, int size_in=0, double* S)
 {
+
+	if (X_in == NULL)
+	{
+		X_in = X;
+		size_in = nobjs;
+	}
+
+	double htemp, havg;
+	for (int i=0; i<size_in; i++)
+	{
+		htemp = 0.0;
+		for (int j=0; j<ntrees; j++)
+		{
+			Path path (dim, &X_in[i*dim], Trees[j]);
+			htemp += path.pathlength;
+		}
+		havg = htemp/ntrees;
+		S[i] = std::pow(2.0, -havg/c);
+	}
 
 }
