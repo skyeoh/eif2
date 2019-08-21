@@ -310,20 +310,18 @@ class iForest
 	iTree* Trees;
 	unsigned random_seed;
     public:
-	iForest (double*, int, int, int, int, int, int);
+	iForest (int, int, int, int, int);
 	~iForest ();
 	void CheckExtensionLevel ();
-	void fit ();
+	void fit (double*, int);
 	void predict (double*, int, double*);
 
 };
 
-iForest::iForest (double* X_in, int nobjs_in, int dim_in, int ntrees_in, int sample_in, int limit_in=0, int exlevel_in=0)
+iForest::iForest (int dim_in, int ntrees_in, int sample_in, int limit_in=0, int exlevel_in=0)
 {
 
-	X = X_in;
 	ntrees = ntrees_in;
-	nobjs = nobjs_in;
 	dim = dim_in;
 	sample = sample_in;
 	limit = limit_in;
@@ -354,9 +352,10 @@ void iForest::CheckExtensionLevel ()
 
 }
 
-void iForest::fit ()
+void iForest::fit (double* X_in, int nobjs_in)
 {
-
+	X = X_in;
+	nobjs = nobjs_in;
 	std::vector<double> Xsubset;
 
 	for (int i=0; i<ntrees; i++)
