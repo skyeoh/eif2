@@ -3,10 +3,19 @@
 #include <cmath>
 #include <vector>
 #include <optional>
+#include <random>
+#include <algorithm>
+#include <unordered_set>
 
 #define EULER_CONSTANT 0.5772156649
 
+#define RANDOM_ENGINE std::mt19937_64
+#define RANDOM_SEED_GENERATOR std::random_device
 
+
+/********************************
+	Utility functions
+ ********************************/
 inline double inner_product (double* X1, double* X2, int dim)
 {
 
@@ -23,6 +32,35 @@ inline double c_factor (int N)
 	double result;
 	result = 2.0*(log(Nd-1.0)+EULER_CONSTANT) - 2.0*(Nd-1.0)/Nd;
 	return result;
+
+}
+
+inline std::vector<int> sample_without_replacement (int k, int N, RANDOM_ENGINE& gen)
+{
+
+    /*
+     * Sample k elements from the range [1, N] without replacement
+     * k should be <= N
+     * Source: https://www.gormanalysis.com/blog/random-numbers-in-cpp/
+     */
+
+    // Create an unordered set to store the samples
+    std::unordered_set<int> samples;
+
+    // Sample and insert values into samples
+    for (int r=N-k+1; r<N+1; ++r)
+    {
+        int v = std::uniform_int_distribution<>(1, r)(gen);
+        if (!samples.insert(v).second) samples.insert(r);
+    }
+
+    // Copy samples into vector
+    std::vector<int> result(samples.begin(), samples.end());
+
+    // Shuffle vector
+    std::shuffle(result.begin(), result.end(), gen);
+
+    return result;
 
 }
 
@@ -89,13 +127,13 @@ class iTree
 //	double* X;	// unused in original code
 	Node root;
     public:
-	iTree (double*, int, int, int, int, int);
+	iTree (double*, int, int, int, int, int, RANDOM_ENGINE&);
 	~iTree ();
-	Node make_tree (double*, int, int);
+	Node make_tree (double*, int, int, RANDOM_ENGINE&);
 
 };
 
-iTree::iTree (double* X_in, int size_in, int e_in, int limit_in, int dim_in, int exlevel_in=0)
+iTree::iTree (double* X_in, int size_in, int e_in, int limit_in, int dim_in, int exlevel_in=0, RANDOM_ENGINE& random_engine_in)
 {
 
 	exlevel = exlevel_in;
@@ -106,7 +144,7 @@ iTree::iTree (double* X_in, int size_in, int e_in, int limit_in, int dim_in, int
 	exnodes = 0;
 	point = new double [dim];
 	normal_vector = new double [dim];
-	root = make_tree (X_in, size_in, e_in);
+	root = make_tree (X_in, size_in, e_in, random_engine_in);
 
 }
 
@@ -118,7 +156,7 @@ iTree::~iTree ()
 
 }
 
-Node iTree::make_tree (double* X_in, int size_in, int e_in)
+Node iTree::make_tree (double* X_in, int size_in, int e_in, RANDOM_ENGINE& random_engine_in)
 {
 
 	e = e_in;
@@ -132,23 +170,30 @@ Node iTree::make_tree (double* X_in, int size_in, int e_in)
 
 	} else {
 
-		/* Find min, max */
-		std::vector<double> mins, maxs;
+		/* Find mins, maxs */
+		std::vector<double> Xmins, Xmaxs;
 		for (int i=0; i<dim; i++)
 		{
-			mins.push_back(X_in[i]);
-			maxs.push_back(X_in[i]);
+			Xmins.push_back(X_in[i]);
+			Xmaxs.push_back(X_in[i]);
 			for (int j=1; j<size_in; j++)
 			{
 				int index = i+j*dim;
-				if (mins[i] > X_in[index]) mins[i] = X_in[index];
-				if (maxs[i] < X_in[index]) maxs[i] = X_in[index];
+				if (Xmins[i] > X_in[index]) Xmins[i] = X_in[index];
+				if (Xmaxs[i] < X_in[index]) Xmaxs[i] = X_in[index];
 			}
 		}
 
-		/* Insert code that picks a random point on splitting hyperplane */
+		/* Pick a random point on splitting hyperplane */
+		for (int i=0; i<dim; i++)
+			point[i] = std::uniform_real_distribution<double> (Xmins[i], Xmaxs[i])(random_engine_in);
 
-		/* Insert code that picks random normal vector according to specified extension level */
+		/* Pick a random normal vector according to specified extension level */
+		for (int i=0; i<dim; i++)
+			normal_vector[i] = std::normal_distribution<double> (0.0, 1.0)(random_engine_in);
+		std::vector<int> normvect_zero_index = sample_without_replacement (dim-exlevel-1, dim, random_engine_in);
+		for (int j=0; j<dim-exlevel-1; j++)
+			normal_vector[normvect_zero_index[j]-1] = 0.0;
 
 		/* Implement splitting criterion */
 		double innerprod, pdotn;
@@ -263,6 +308,7 @@ class iForest
 	double* X;
 	double c;
 	iTree* Trees;
+	unsigned random_seed;
     public:
 	iForest (double*, int, int, int, int, int, int);
 	~iForest ();
@@ -286,6 +332,8 @@ iForest::iForest (double* X_in, int nobjs_in, int dim_in, int ntrees_in, int sam
 	CheckExtensionLevel();
 	c = c_factor (sample);
 	Trees = new iTree [ntrees];
+	RANDOM_SEED_GENERATOR random_seed_generator;
+	random_seed = random_seed_generator();
 
 }
 
@@ -309,13 +357,17 @@ void iForest::CheckExtensionLevel ()
 void iForest::fit ()
 {
 
-	int i;
-	double* Xsubset;
+	std::vector<double> Xsubset;
 
-	for (i=0; i<ntrees; i++)
+	for (int i=0; i<ntrees; i++)
 	{
-		/* Insert code that selects a random subset of X_in of size sample_in */
-		Trees[i](Xsubset, sample, 0, limit, dim, exlevel);
+		/* Select a random subset of X_in of size sample_in */
+		RANDOM_ENGINE random_engine (random_seed+i);
+		std::vector<int> sample_index = sample_without_replacement (sample, nobjs, random_engine);
+		Xsubset.clear();
+		for (int j=0; j<sample; j++) Xsubset.push_back(X[sample_index[j]-1]);
+
+		Trees[i](&Xsubset[0], sample, 0, limit, dim, exlevel, random_engine);
 	}
 
 }
