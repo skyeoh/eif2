@@ -73,20 +73,23 @@ class Node
 
     private:
 	int e;
+    protected:
+
+    public:
 	int size;
 //	double* X;	// unused in original code
 	std::vector<double> normal_vector;
 	std::vector<double> point;
-	Node left;
-	Node right;
+	Node* left;
+	Node* right;
 	std::string node_type;
-    public:
-	Node (int, int, double*, double*, int, Node, Node, std::string);
+
+	Node (int, int, double*, double*, int, Node*, Node*, std::string);
 	~Node ();
 
 };
 
-Node::Node (int size_in, int dim_in, double* normal_vector_in, double* point_in, int e_in, Node left_in, Node right_in, std::string node_type_in)
+Node::Node (int size_in, int dim_in, double* normal_vector_in, double* point_in, int e_in, Node* left_in, Node* right_in, std::string node_type_in)
 {
 
 	e = e_in;
@@ -125,15 +128,29 @@ class iTree
 	double* point;
 	double* normal_vector;
 //	double* X;	// unused in original code
-	Node root;
+    protected:
+
     public:
-	iTree (double*, int, int, int, int, int, RANDOM_ENGINE&);
+	Node* root;
+
+	iTree ();
 	~iTree ();
-	Node make_tree (double*, int, int, RANDOM_ENGINE&);
+	void build_tree (double*, int, int, int, int, RANDOM_ENGINE&, int);
+	Node* add_node (double*, int, int, RANDOM_ENGINE&);
 
 };
 
-iTree::iTree (double* X_in, int size_in, int e_in, int limit_in, int dim_in, int exlevel_in=0, RANDOM_ENGINE& random_engine_in)
+iTree::iTree ()
+{
+
+}
+
+iTree::~iTree ()
+{
+
+}
+
+void iTree::build_tree (double* X_in, int size_in, int e_in, int limit_in, int dim_in, RANDOM_ENGINE& random_engine_in, int exlevel_in=0)
 {
 
 	exlevel = exlevel_in;
@@ -144,28 +161,22 @@ iTree::iTree (double* X_in, int size_in, int e_in, int limit_in, int dim_in, int
 	exnodes = 0;
 	point = new double [dim];
 	normal_vector = new double [dim];
-	root = make_tree (X_in, size_in, e_in, random_engine_in);
-
-}
-
-iTree::~iTree ()
-{
-
+	root = add_node (X_in, size_in, e_in, random_engine_in);
 	delete [] point;
 	delete [] normal_vector;
 
 }
 
-Node iTree::make_tree (double* X_in, int size_in, int e_in, RANDOM_ENGINE& random_engine_in)
+Node* iTree::add_node (double* X_in, int size_in, int e_in, RANDOM_ENGINE& random_engine_in)
 {
 
 	e = e_in;
 	if (e_in >= limit || size_in <= 1) {
 
-		std::optional<Node> left;
-		std::optional<Node> right;
+		Node* left = NULL;
+		Node* right = NULL;
 		exnodes += 1;
-		Node node (size_in, dim, normal_vector, point, e_in, left, right, "exNode");
+		Node* node = new Node (size_in, dim, normal_vector, point, e_in, left, right, "exNode");
 		return node;
 
 	} else {
@@ -214,10 +225,10 @@ Node iTree::make_tree (double* X_in, int size_in, int e_in, RANDOM_ENGINE& rando
 			}
 		}
 
-		Node left = make_tree (&XL[0], sizeXL, e_in+1);
-		Node right = make_tree (&XR[0], sizeXR, e_in+1);
+		Node* left = add_node (&XL[0], sizeXL, e_in+1, random_engine_in);
+		Node* right = add_node (&XR[0], sizeXR, e_in+1, random_engine_in);
 
-		Node node (size_in, dim, normal_vector, point, e_in, left, right, "inNode");
+		Node* node = new Node (size_in, dim, normal_vector, point, e_in, left, right, "inNode");
 		return node;
 
 	}
@@ -236,11 +247,14 @@ class Path
 	int dim;
 	double* x;
 	double e;
-	double pathlength;
+    protected:
+
     public:
+	double pathlength;
+
 	Path (int, double*, iTree);
 	~Path ();
-	double find_path (Node);
+	double find_path (Node*);
 
 };
 
@@ -259,15 +273,15 @@ Path::~Path ()
 
 }
 
-double Path::find_path (Node node_in)
+double Path::find_path (Node* node_in)
 {
 
-	if (node_in.node_type == "exNode") {
+	if (node_in[0].node_type == "exNode") {
 
-		if (node_in.size <= 1) {
+		if (node_in[0].size <= 1) {
 			return e;
 		} else {
-			e = e + c_factor (node_in.size);
+			e = e + c_factor (node_in[0].size);
 			return e;
 		}
 
@@ -276,14 +290,14 @@ double Path::find_path (Node node_in)
 		e += 1.0;
 
 		double xdotn, pdotn, plength;
-		pdotn = inner_product (&node_in.point[0], &node_in.normal_vector[0], dim);
-		xdotn = inner_product (x, &node_in.normal_vector[0], dim);
+		pdotn = inner_product (&node_in[0].point[0], &node_in[0].normal_vector[0], dim);
+		xdotn = inner_product (x, &node_in[0].normal_vector[0], dim);
 		if (xdotn < pdotn) {
 			path_list.push_back('L');
-			plength = find_path (node_in.left);
+			plength = find_path (node_in[0].left);
 		} else {
 			path_list.push_back('R');
-			plength = find_path (node_in.right);
+			plength = find_path (node_in[0].right);
 		}
 		return plength;
 
@@ -309,12 +323,14 @@ class iForest
 	double c;
 	iTree* Trees;
 	unsigned random_seed;
+    protected:
+
     public:
 	iForest (int, int, int, int, int);
 	~iForest ();
 	void CheckExtensionLevel ();
 	void fit (double*, int);
-	void predict (double*, int, double*);
+	void predict (double*, double*, int);
 
 };
 
@@ -366,12 +382,12 @@ void iForest::fit (double* X_in, int nobjs_in)
 		Xsubset.clear();
 		for (int j=0; j<sample; j++) Xsubset.push_back(X[sample_index[j]-1]);
 
-		Trees[i](&Xsubset[0], sample, 0, limit, dim, exlevel, random_engine);
+		Trees[i].build_tree (&Xsubset[0], sample, 0, limit, dim, random_engine, exlevel);
 	}
 
 }
 
-void iForest::predict (double* X_in=NULL, int size_in=0, double* S)
+void iForest::predict (double* S, double* X_in=NULL, int size_in=0)
 {
 
 	if (X_in == NULL)
