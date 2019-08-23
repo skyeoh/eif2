@@ -2,7 +2,6 @@
 #include <cstdlib>
 #include <cmath>
 #include <vector>
-#include <optional>
 #include <random>
 #include <algorithm>
 #include <unordered_set>
