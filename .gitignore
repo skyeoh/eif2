@@ -1,2 +1,6 @@
 # Object files
 *.o
+
+# Files generated from Cython build
+*.cpp
+*.so

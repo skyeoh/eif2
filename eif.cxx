@@ -1,11 +1,3 @@
-#include <iostream>
-#include <cstdlib>
-#include <cmath>
-#include <vector>
-#include <random>
-#include <algorithm>
-#include <unordered_set>
-
 #include "eif.hxx"
 
 
@@ -246,7 +238,7 @@ iForest::iForest (int dim_in, int ntrees_in, int sample_in, int limit_in=0, int 
 	dim = dim_in;
 	sample = sample_in;
 	limit = limit_in;
-	if (limit_in == 0) limit = (int) ceil(log2(sample));
+	if (limit_in <= 0) limit = (int) ceil(log2(sample)); // limit must be a positive integer
 	exlevel = exlevel_in;
 	CheckExtensionLevel();
 	c = c_factor (sample);

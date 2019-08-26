@@ -1,3 +1,11 @@
+#include <iostream>
+#include <cstdlib>
+#include <cmath>
+#include <vector>
+#include <random>
+#include <algorithm>
+#include <unordered_set>
+
 #define EULER_CONSTANT 0.5772156649
 
 #define RANDOM_ENGINE std::mt19937_64
