@@ -118,10 +118,10 @@ class iForest
     protected:
 
     public:
-        iForest (int, int, int, int, int);
+        iForest (int, int, int, int);
         ~iForest ();
         void CheckExtensionLevel ();
-        void fit (double*, int);
+        void fit (double*, int, int);
         void predict (double*, double*, int);
 
 };

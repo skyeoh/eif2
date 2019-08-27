@@ -6,7 +6,7 @@ import numpy
 
 setup(
         cmdclass = {'build_ext': build_ext},
-        ext_modules = [Extension("eif",
+        ext_modules = [Extension("eifcxx",
                                   sources=["_eif.pyx", "eif.cxx"],
                                   include_dirs=[numpy.get_include()],
                                   extra_compile_args=['-Wcpp'],

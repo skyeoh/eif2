@@ -12,17 +12,18 @@ np.import_array()
 
 cdef extern from "eif.hxx":
     cdef cppclass iForest:
-        iForest (int, int, int, int, int)
+        iForest (int, int, int, int)
         void CheckExtensionLevel ()
-        void fit (double*, int)
+        void fit (double*, int, int)
         void predict (double*, double*, int)
 
 cdef class PyiForest:
     cdef int size_Xfit
+    cdef int dim
     cdef iForest* thisptr
 
-    def __cinit__ (self, int dim, int ntrees, int sample, int limit=0, int exlevel=0):
-        self.thisptr = new iForest (dim, ntrees, sample, limit, exlevel)
+    def __cinit__ (self, int ntrees, int sample, int limit=0, int exlevel=0):
+        self.thisptr = new iForest (ntrees, sample, limit, exlevel)
 
     def __dealloc__ (self):
         del self.thisptr
@@ -34,7 +35,8 @@ cdef class PyiForest:
     @cython.wraparound(False)
     def fit (self, np.ndarray[double, ndim=2, mode="c"] Xfit not None):
         self.size_Xfit = Xfit.shape[0]
-        self.thisptr.fit (<double*> np.PyArray_DATA(Xfit), self.size_Xfit)
+        self.dim = Xfit.shape[1]
+        self.thisptr.fit (<double*> np.PyArray_DATA(Xfit), self.size_Xfit, self.dim)
 
     @cython.boundscheck(False)
     @cython.wraparound(False)

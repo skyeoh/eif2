@@ -231,16 +231,14 @@ double Path::find_path (Node* node_in)
 /****************************
         Class iForest
  ****************************/
-iForest::iForest (int dim_in, int ntrees_in, int sample_in, int limit_in=0, int exlevel_in=0)
+iForest::iForest (int ntrees_in, int sample_in, int limit_in=0, int exlevel_in=0)
 {
 
 	ntrees = ntrees_in;
-	dim = dim_in;
 	sample = sample_in;
 	limit = limit_in;
 	if (limit_in <= 0) limit = (int) ceil(log2(sample)); // limit must be a positive integer
 	exlevel = exlevel_in;
-	CheckExtensionLevel();
 	c = c_factor (sample);
 	Trees = new iTree [ntrees];
 	RANDOM_SEED_GENERATOR random_seed_generator;
@@ -265,10 +263,14 @@ void iForest::CheckExtensionLevel ()
 
 }
 
-void iForest::fit (double* X_in, int nobjs_in)
+void iForest::fit (double* X_in, int nobjs_in, int dim_in)
 {
+
 	X = X_in;
 	nobjs = nobjs_in;
+	dim = dim_in;
+	CheckExtensionLevel();
+
 	std::vector<double> Xsubset;
 
 	for (int i=0; i<ntrees; i++)
