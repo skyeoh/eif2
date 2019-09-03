@@ -12,14 +12,6 @@
 #define RANDOM_SEED_GENERATOR std::random_device
 
 
-/********************************
-        Utility functions
- ********************************/
-inline double inner_product (double*, double*, int);
-inline double c_factor (int);
-inline std::vector<int> sample_without_replacement (int, int, RANDOM_ENGINE&);
-
-
 /****************************
         Class Node
  ****************************/
@@ -27,10 +19,11 @@ class Node
 {
 
     private:
-        int e;
+
     protected:
 
     public:
+	int e;
         int size;
 //      double* X;      // unused in original code
         std::vector<double> normal_vector;
@@ -59,8 +52,8 @@ class iTree
         int dim;
         int limit;
         int exnodes;
-        double* point;
-        double* normal_vector;
+//	double* point;		// in original code, but not necessary
+//	double* normal_vector;	// in original code, but not necessary
 //      double* X;      // unused in original code
     protected:
 
@@ -123,5 +116,15 @@ class iForest
         void CheckExtensionLevel ();
         void fit (double*, int, int);
         void predict (double*, double*, int);
+	void OutputTreeNodes (int);
 
 };
+
+
+/********************************
+        Utility functions
+ ********************************/
+inline double inner_product (double*, double*, int);
+inline double c_factor (int);
+inline std::vector<int> sample_without_replacement (int, int, RANDOM_ENGINE&);
+void output_tree_node (Node*, std::string);

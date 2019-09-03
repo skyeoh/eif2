@@ -52,6 +52,41 @@ inline std::vector<int> sample_without_replacement (int k, int N, RANDOM_ENGINE&
 
 }
 
+void output_tree_node (Node* node_in, std::string string_in)
+{
+
+	std::cout << "==== Node ====" << std::endl;
+	std::cout << "path: " 	<< string_in << std::endl;
+	std::cout << "e   : " 	<< node_in[0].e << std::endl;
+	std::cout << "size: " 	<< node_in[0].size << std::endl;
+	std::cout << "n   : [";
+	int size_n = node_in[0].normal_vector.size();
+	for (int i=0; i<size_n; i++)
+	{
+		std::cout << node_in[0].normal_vector[i];
+		if (i<size_n-1) std::cout << ", ";
+	}
+	std::cout << "]" << std::endl;
+	std::cout << "p   : [";
+	int size_p = node_in[0].point.size();
+	for (int i=0; i<size_p; i++)
+	{
+		std::cout << node_in[0].point[i];
+		if (i<size_p-1) std::cout << ", ";
+	}
+	std::cout << "]" << std::endl;
+	std::cout << "type: " << node_in[0].node_type << std::endl;
+
+	if (node_in[0].node_type == "exNode") return;
+	else
+	{
+		output_tree_node (node_in[0].left, string_in.append(" L"));
+		string_in.pop_back();
+		output_tree_node (node_in[0].right, string_in.append("R"));
+	}
+
+}
+
 
 /****************************
         Class Node
@@ -100,11 +135,7 @@ void iTree::build_tree (double* X_in, int size_in, int e_in, int limit_in, int d
 	dim = dim_in;
 	limit = limit_in;
 	exnodes = 0;
-	point = new double [dim];
-	normal_vector = new double [dim];
 	root = add_node (X_in, size_in, e_in, random_engine_in);
-	delete [] point;
-	delete [] normal_vector;
 
 }
 
@@ -112,12 +143,15 @@ Node* iTree::add_node (double* X_in, int size_in, int e_in, RANDOM_ENGINE& rando
 {
 
 	e = e_in;
+	std::vector<double> point (dim, 0.0);
+	std::vector<double> normal_vector (dim, 0.0);
+
 	if (e_in >= limit || size_in <= 1) {
 
 		Node* left = NULL;
 		Node* right = NULL;
 		exnodes += 1;
-		Node* node = new Node (size_in, dim, normal_vector, point, e_in, left, right, "exNode");
+		Node* node = new Node (size_in, dim, &normal_vector[0], &point[0], e_in, left, right, "exNode");
 		return node;
 
 	} else {
@@ -152,11 +186,11 @@ Node* iTree::add_node (double* X_in, int size_in, int e_in, RANDOM_ENGINE& rando
 		std::vector<double> XL, XR;
 		int sizeXL = 0, sizeXR = 0;
 
-		pdotn = inner_product (point, normal_vector, dim);
+		pdotn = inner_product (&point[0], &normal_vector[0], dim);
 		for (int i=0; i<size_in; i++)
 		{
 			int index = i*dim;
-			innerprod = inner_product (&X_in[index], normal_vector, dim);
+			innerprod = inner_product (&X_in[index], &normal_vector[0], dim);
 			if (innerprod < pdotn) {
 				for (int j=0; j<dim; j++) XL.push_back(X_in[j+index]);
 				sizeXL += 1;
@@ -169,7 +203,7 @@ Node* iTree::add_node (double* X_in, int size_in, int e_in, RANDOM_ENGINE& rando
 		Node* left = add_node (&XL[0], sizeXL, e_in+1, random_engine_in);
 		Node* right = add_node (&XR[0], sizeXR, e_in+1, random_engine_in);
 
-		Node* node = new Node (size_in, dim, normal_vector, point, e_in, left, right, "inNode");
+		Node* node = new Node (size_in, dim, &normal_vector[0], &point[0], e_in, left, right, "inNode");
 		return node;
 
 	}
@@ -279,7 +313,14 @@ void iForest::fit (double* X_in, int nobjs_in, int dim_in)
 		RANDOM_ENGINE random_engine (random_seed+i);
 		std::vector<int> sample_index = sample_without_replacement (sample, nobjs, random_engine);
 		Xsubset.clear();
-		for (int j=0; j<sample; j++) Xsubset.push_back(X[sample_index[j]-1]);
+		for (int j=0; j<sample; j++)
+		{
+			for (int k=0; k<dim; k++)
+			{
+				int index = k+(sample_index[j]-1)*dim;
+				Xsubset.push_back(X[index]);
+			}
+		}
 
 		Trees[i].build_tree (&Xsubset[0], sample, 0, limit, dim, random_engine, exlevel);
 	}
@@ -307,5 +348,12 @@ void iForest::predict (double* S, double* X_in=NULL, int size_in=0)
 		havg = htemp/ntrees;
 		S[i] = std::pow(2.0, -havg/c);
 	}
+
+}
+
+void iForest::OutputTreeNodes (int iTree_index)
+{
+
+	output_tree_node (Trees[iTree_index].root, "root");
 
 }

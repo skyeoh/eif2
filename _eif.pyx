@@ -16,6 +16,7 @@ cdef extern from "eif.hxx":
         void CheckExtensionLevel ()
         void fit (double*, int, int)
         void predict (double*, double*, int)
+        void OutputTreeNodes (int)
 
 cdef class PyiForest:
     cdef int size_Xfit
@@ -49,3 +50,6 @@ cdef class PyiForest:
             S = np.empty(Xpred.shape[0], dtype=np.float64, order='C')
             self.thisptr.predict (<double*> np.PyArray_DATA(S), <double*> np.PyArray_DATA(Xpred), Xpred.shape[0])
         return S
+
+    def OutputTreeNodes (self, int tree_index):
+        self.thisptr.OutputTreeNodes (tree_index)
