@@ -75,13 +75,13 @@ class Path
 {
 
     private:
-        std::vector<char> path_list;
         int dim;
         double* x;
         double e;
     protected:
 
     public:
+        std::vector<char> path_list;
         double pathlength;
 
         Path (int, double*, iTree);
