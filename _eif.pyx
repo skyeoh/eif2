@@ -13,7 +13,6 @@ np.import_array()
 cdef extern from "eif.hxx":
     cdef cppclass iForest:
         iForest (int, int, int, int)
-        void CheckExtensionLevel ()
         void fit (double*, int, int)
         void predict (double*, double*, int)
         void OutputTreeNodes (int)
@@ -29,24 +28,25 @@ cdef class PyiForest:
     def __dealloc__ (self):
         del self.thisptr
 
-    def CheckExtensionLevel (self):
-        self.thisptr.CheckExtensionLevel ()
-
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    def fit (self, np.ndarray[double, ndim=2, mode="c"] Xfit not None):
+    def fit (self, np.ndarray[double, ndim=2] Xfit not None):
+        if not Xfit.flags['C_CONTIGUOUS']:
+            Xfit = Xfit.copy(order='C')
         self.size_Xfit = Xfit.shape[0]
         self.dim = Xfit.shape[1]
         self.thisptr.fit (<double*> np.PyArray_DATA(Xfit), self.size_Xfit, self.dim)
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    def predict (self, np.ndarray[double, ndim=2, mode="c"] Xpred=None):
+    def predict (self, np.ndarray[double, ndim=2] Xpred=None):
         cdef np.ndarray[double, ndim=1, mode="c"] S
         if Xpred is None:
             S = np.empty(self.size_Xfit, dtype=np.float64, order='C')
             self.thisptr.predict (<double*> np.PyArray_DATA(S), NULL, 0)
         else:
+            if not Xpred.flags['C_CONTIGUOUS']:
+                Xpred = Xpred.copy(order='C')
             S = np.empty(Xpred.shape[0], dtype=np.float64, order='C')
             self.thisptr.predict (<double*> np.PyArray_DATA(S), <double*> np.PyArray_DATA(Xpred), Xpred.shape[0])
         return S

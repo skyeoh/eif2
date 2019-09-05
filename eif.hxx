@@ -108,12 +108,14 @@ class iForest
         double c;
         iTree* Trees;
         unsigned random_seed;
+
+	bool CheckExtensionLevel ();
+	bool CheckSampleSize ();
     protected:
 
     public:
         iForest (int, int, int, int);
         ~iForest ();
-        void CheckExtensionLevel ();
         void fit (double*, int, int);
         void predict (double*, double*, int);
 	void OutputTreeNodes (int);
@@ -128,3 +130,4 @@ inline double inner_product (double*, double*, int);
 inline double c_factor (int);
 inline std::vector<int> sample_without_replacement (int, int, RANDOM_ENGINE&);
 void output_tree_node (Node*, std::string);
+void delete_tree_node (Node*);

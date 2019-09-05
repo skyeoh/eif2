@@ -87,6 +87,19 @@ void output_tree_node (Node* node_in, std::string string_in)
 
 }
 
+void delete_tree_node (Node* node_in)
+{
+
+	if (node_in[0].node_type == "exNode") delete node_in;
+	else
+	{
+		delete_tree_node (node_in[0].left);
+		delete_tree_node (node_in[0].right);
+		delete node_in;
+	}
+
+}
+
 
 /****************************
         Class Node
@@ -118,7 +131,7 @@ Node::~Node ()
  ****************************/
 iTree::iTree ()
 {
-
+	root = NULL;
 }
 
 iTree::~iTree ()
@@ -283,17 +296,45 @@ iForest::iForest (int ntrees_in, int sample_in, int limit_in=0, int exlevel_in=0
 iForest::~iForest ()
 {
 
+	for (int i=0; i<ntrees; i++)
+		if (Trees[i].root != NULL) delete_tree_node (Trees[i].root);
 	delete [] Trees;
 
 }
 
-void iForest::CheckExtensionLevel ()
+bool iForest::CheckExtensionLevel ()
 {
 
 	if (exlevel < 0)
+	{
 		std::cout << "Extension level must be an integer between 0 and " << dim-1 << "." << std::endl;
+		return false;
+	}
 	if (exlevel > dim-1)
+	{
 		std::cout << "Your data has " << dim << " dimensions. Extension level cannot be higher than " << dim-1 << "." << std::endl;
+		return false;
+	}
+
+	return true;
+
+}
+
+bool iForest::CheckSampleSize ()
+{
+
+	if (sample < 1)
+	{
+		std::cout << "Subsample size must be an integer between 1 and " << nobjs << "." << std::endl;
+		return false;
+	}
+	if (sample > nobjs)
+	{
+		std::cout << "No. of data points is " << nobjs << ". Subsample size cannot be larger than " << nobjs << "." << std::endl;
+		return false;
+	}
+
+	return true;
 
 }
 
@@ -303,7 +344,8 @@ void iForest::fit (double* X_in, int nobjs_in, int dim_in)
 	X = X_in;
 	nobjs = nobjs_in;
 	dim = dim_in;
-	CheckExtensionLevel();
+	if (!CheckSampleSize ()) return;
+	if (!CheckExtensionLevel ()) return;
 
 	std::vector<double> Xsubset;
 
