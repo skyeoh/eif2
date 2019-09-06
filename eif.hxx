@@ -114,7 +114,7 @@ class iForest
     protected:
 
     public:
-        iForest (int, int, int, int);
+        iForest (int, int, int, int, int);
         ~iForest ();
         void fit (double*, int, int);
         void predict (double*, double*, int);

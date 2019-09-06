@@ -278,7 +278,7 @@ double Path::find_path (Node* node_in)
 /****************************
         Class iForest
  ****************************/
-iForest::iForest (int ntrees_in, int sample_in, int limit_in=0, int exlevel_in=0)
+iForest::iForest (int ntrees_in, int sample_in, int limit_in=0, int exlevel_in=0, int random_seed_in=-1)
 {
 
 	ntrees = ntrees_in;
@@ -288,8 +288,12 @@ iForest::iForest (int ntrees_in, int sample_in, int limit_in=0, int exlevel_in=0
 	exlevel = exlevel_in;
 	c = c_factor (sample);
 	Trees = new iTree [ntrees];
-	RANDOM_SEED_GENERATOR random_seed_generator;
-	random_seed = random_seed_generator();
+	if (random_seed_in < 0) {
+		RANDOM_SEED_GENERATOR random_seed_generator;
+		random_seed = random_seed_generator();
+	} else {
+		random_seed = (unsigned) random_seed_in;
+	}
 
 }
 
