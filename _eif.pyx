@@ -12,7 +12,8 @@ cimport __eif
 
 np.import_array()
 
-cdef class iForest:
+
+cdef class _iForest:
     cdef int size_Xfit
     cdef int dim
     cdef __eif.iForest* thisptr
@@ -47,4 +48,42 @@ cdef class iForest:
         return S
 
     def OutputTreeNodes (self, int tree_index):
+        self.thisptr.OutputTreeNodes (tree_index)
+
+
+# ******** Redefinition for backward compatiblity ********
+cdef class iForest:
+    cdef int size_X
+    cdef int dim
+    cdef __eif.iForest* thisptr
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    def __cinit__ (self, np.ndarray[double, ndim=2] X not None, int ntrees, int sample_size, int limit=0, int ExtensionLevel=0, int seed=-1):
+        self.thisptr = new __eif.iForest (ntrees, sample_size, limit, ExtensionLevel, seed)
+
+        if not X.flags['C_CONTIGUOUS']:
+            X = X.copy(order='C')
+        self.size_X = X.shape[0]
+        self.dim = X.shape[1]
+        self.thisptr.fit (<double*> np.PyArray_DATA(X), self.size_X, self.dim)
+
+    def __dealloc__ (self):
+        del self.thisptr
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    def compute_paths (self, np.ndarray[double, ndim=2] X_in=None):
+        cdef np.ndarray[double, ndim=1, mode="c"] S
+        if X_in is None:
+            S = np.empty(self.size_X, dtype=np.float64, order='C')
+            self.thisptr.predict (<double*> np.PyArray_DATA(S), NULL, 0)
+        else:
+            if not X_in.flags['C_CONTIGUOUS']:
+                X_in = X_in.copy(order='C')
+            S = np.empty(X_in.shape[0], dtype=np.float64, order='C')
+            self.thisptr.predict (<double*> np.PyArray_DATA(S), <double*> np.PyArray_DATA(X_in), X_in.shape[0])
+        return S
+
+    def output_tree_nodes (self, int tree_index):
         self.thisptr.OutputTreeNodes (tree_index)
