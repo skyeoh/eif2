@@ -8,22 +8,17 @@ import cython
 import numpy as np
 cimport numpy as np
 
+cimport __eif
+
 np.import_array()
 
-cdef extern from "eif.hxx":
-    cdef cppclass iForest:
-        iForest (int, int, int, int, int)
-        void fit (double*, int, int)
-        void predict (double*, double*, int)
-        void OutputTreeNodes (int)
-
-cdef class PyiForest:
+cdef class iForest:
     cdef int size_Xfit
     cdef int dim
-    cdef iForest* thisptr
+    cdef __eif.iForest* thisptr
 
     def __cinit__ (self, int ntrees, int sample, int limit=0, int exlevel=0, int seed=-1):
-        self.thisptr = new iForest (ntrees, sample, limit, exlevel, seed)
+        self.thisptr = new __eif.iForest (ntrees, sample, limit, exlevel, seed)
 
     def __dealloc__ (self):
         del self.thisptr
