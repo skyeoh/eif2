@@ -7,6 +7,24 @@
 inline double inner_product (double* X1, double* X2, int dim)
 {
 
+       /*
+	* Calculate inner (dot) product between two vectors
+	*
+	* Parameters
+	* ----------
+	* X1 : double*
+	*     Pointer to first element of first vector
+	* X2 : double*
+	*     Pointer to first element of second vector
+	* dim : int
+	*     Dimension of the vectors
+	*
+	* Returns
+	* -------
+	* double
+	*     Inner (dot) product
+	*/
+
 	double result = 0.0;
 	for (int i=0; i<dim; i++) result += X1[i]*X2[i];
 	return result;
@@ -15,6 +33,21 @@ inline double inner_product (double* X1, double* X2, int dim)
 
 inline double c_factor (int N)
 {
+
+       /*
+	* Calculate the average path length of an unsuccessful search
+	* in a binary search tree (BST) given N points
+	*
+	* Parameters
+	* ----------
+	* N : int
+	*     Number of data points for the BST
+	*
+	* Returns
+	* -------
+	* double
+	*     Average path length of unsuccessful search in a BST
+	*/
 
 	double Nd = (double) N;
 	double result;
@@ -26,34 +59,63 @@ inline double c_factor (int N)
 inline std::vector<int> sample_without_replacement (int k, int N, RANDOM_ENGINE& gen)
 {
 
-    /*
-     * Sample k elements from the range [1, N] without replacement
-     * k should be <= N
-     * Source: https://www.gormanalysis.com/blog/random-numbers-in-cpp/
-     */
+       /*
+	* Sample k elements from the range [1, N] without replacement
+	* k should be <= N
+	* Source: https://www.gormanalysis.com/blog/random-numbers-in-cpp/
+	*
+	* Parameters
+	* ----------
+	* k : int
+	*     Subsample size
+	* N : int
+	*     Sample size
+	* gen :
+	*     Random number generator
+	*
+	* Returns
+	* -------
+	* Vector of ints
+	*     A list of k ints selected from [1, N]
+	*/
 
-    // Create an unordered set to store the samples
-    std::unordered_set<int> samples;
+	// Create an unordered set to store the samples
+	std::unordered_set<int> samples;
 
-    // Sample and insert values into samples
-    for (int r=N-k+1; r<N+1; ++r)
-    {
-        int v = std::uniform_int_distribution<>(1, r)(gen);
-        if (!samples.insert(v).second) samples.insert(r);
-    }
+	// Sample and insert values into samples
+	for (int r=N-k+1; r<N+1; ++r)
+	{
+		int v = std::uniform_int_distribution<>(1, r)(gen);
+		if (!samples.insert(v).second) samples.insert(r);
+	}
 
-    // Copy samples into vector
-    std::vector<int> result(samples.begin(), samples.end());
+	// Copy samples into vector
+	std::vector<int> result(samples.begin(), samples.end());
 
-    // Shuffle vector
-    std::shuffle(result.begin(), result.end(), gen);
+	// Shuffle vector
+	std::shuffle(result.begin(), result.end(), gen);
 
-    return result;
+	return result;
 
 }
 
 void output_tree_node (Node* node_in, std::string string_in)
 {
+
+       /*
+	* Output properties of tree node, e.g. path to node and depth
+	*
+	* Parameters
+	* ----------
+	* node_in : Node*
+	*     Pointer to tree node
+	* string_in : string object
+	*     Path to node from root (e.g. root L L R)
+	*
+	* Returns
+	* -------
+	*     N/A
+	*/
 
 	std::cout << "==== Node ====" << std::endl;
 	std::cout << "path: " 	<< string_in << std::endl;
@@ -90,8 +152,21 @@ void output_tree_node (Node* node_in, std::string string_in)
 void delete_tree_node (Node* node_in)
 {
 
-	if (node_in[0].node_type == "exNode") delete node_in;
-	else
+       /*
+        * Delete tree node
+        *
+        * Parameters
+        * ----------
+        * node_in : Node*
+        *     Pointer to tree node
+        *
+        * Returns
+        * -------
+        *     N/A
+        */
+
+       if (node_in[0].node_type == "exNode") delete node_in;
+       else
 	{
 		delete_tree_node (node_in[0].left);
 		delete_tree_node (node_in[0].right);
@@ -106,6 +181,34 @@ void delete_tree_node (Node* node_in)
  ****************************/
 Node::Node (int size_in, int dim_in, double* normal_vector_in, double* point_in, int e_in, Node* left_in, Node* right_in, std::string node_type_in)
 {
+
+       /*
+	* Initialize a Node object (constructor)
+	* This populates the members of the Node object.
+	*
+	* Parameters
+	* ----------
+	* size_in : int
+	*     Size of dataset present at the node
+	* dim_in : int
+	*     Dimension of dataset
+	* normal_vector_in : double*
+	*     Normal vector used to build the hyperplane that splits the data at the node
+	* point_in : double*
+	*     Intercept point through which the hyperplane passes
+	* e_in : int
+	*     Depth of the node on the tree
+	* left_in : Node*
+	*     Left child node
+	* right_in : Node*
+	*     Right child node
+	* node_type_in : string object
+	*     Type of the node: external (exNode) or internal (inNode)
+	*
+	* Returns
+	* -------
+	*     N/A
+	*/
 
 	e = e_in;
 	size = size_in;
@@ -123,6 +226,18 @@ Node::Node (int size_in, int dim_in, double* normal_vector_in, double* point_in,
 Node::~Node ()
 {
 
+       /*
+	* Destroy a Node object (destructor)
+	*
+	* Parameters
+	* ----------
+	*     N/A
+	*
+	* Returns
+	* -------
+	*     N/A
+	*/
+
 }
 
 
@@ -131,16 +246,68 @@ Node::~Node ()
  ****************************/
 iTree::iTree ()
 {
+
+       /*
+	* Initialize an iTree object (constructor)
+	*
+	* Parameters
+	* ----------
+	*     N/A
+	*
+	* Returns
+	* -------
+	*     N/A
+	*/
+
 	root = NULL;
+
 }
 
 iTree::~iTree ()
 {
 
+       /*
+	* Destroy an iTree object (destructor)
+	*
+	* Parameters
+	* ----------
+	*     N/A
+	*
+	* Returns
+	* -------
+	*     N/A
+	*/
+
 }
 
 void iTree::build_tree (double* X_in, int size_in, int e_in, int limit_in, int dim_in, RANDOM_ENGINE& random_engine_in, int exlevel_in=0)
 {
+
+       /*
+	* Build (train) a tree
+	*
+	* Parameters
+	* ----------
+	* X_in : double*
+	*     Pointer to the dataset used to build (train) the tree
+	* size_in : int
+	*     Size of the dataset used to build (train) the tree
+	* e_in : int
+	*     Depth of the tree
+	* limit_in : int
+	*     Maximum depth the tree can reach before creation is terminated
+	* dim_in : int
+	*     Dimension of the dataset
+	* random_engine_in :
+	*     Random number generator
+	* exlevel_in : int
+	*     Extension level used in splitting criterion
+	*     If value is not given, value is set to 0 (regular isolation forest).
+	*
+	* Returns
+	* -------
+	*     N/A
+	*/
 
 	exlevel = exlevel_in;
 	e = e_in;
@@ -154,6 +321,27 @@ void iTree::build_tree (double* X_in, int size_in, int e_in, int limit_in, int d
 
 Node* iTree::add_node (double* X_in, int size_in, int e_in, RANDOM_ENGINE& random_engine_in)
 {
+
+       /*
+	* Add a node to the tree
+	* The tree is built recursively from the node.
+	*
+	* Parameters
+	* ----------
+	* X_in : double*
+	*     Pointer to the dataset present at the node
+	* size_in : int
+	*     Size of the dataset present at the node
+	* e_in : int
+	*     Depth of the node on the tree
+	* random_engine_in :
+	*     Random number generator
+	*
+	* Returns
+	* -------
+	* Node*
+	*     Pointer to the node
+	*/
 
 	e = e_in;
 	std::vector<double> point (dim, 0.0);
@@ -230,6 +418,24 @@ Node* iTree::add_node (double* X_in, int size_in, int e_in, RANDOM_ENGINE& rando
 Path::Path (int dim_in, double* x_in, iTree itree_in)
 {
 
+       /*
+	* Initialize a Path object (constructor)
+	*
+	* Parameters
+	* ----------
+	* dim_in : int
+	*     Dimension of the data point
+	*     This must be equal to the dimension of the training dataset.
+	* x_in : double*
+	*     Pointer to the data point
+	* itree_in : iTree
+	*     Tree
+	*
+	* Returns
+	* -------
+	*     N/A
+	*/
+
 	dim = dim_in;
 	x = x_in;
 	e = 0.0;
@@ -240,10 +446,37 @@ Path::Path (int dim_in, double* x_in, iTree itree_in)
 Path::~Path ()
 {
 
+       /*
+	* Destroy a Path object (destructor)
+	*
+	* Parameters
+	* ----------
+	*     N/A
+	*
+	* Returns
+	* -------
+	*     N/A
+	*/
+
 }
 
 double Path::find_path (Node* node_in)
 {
+
+       /*
+	* Find the path a data point takes along a tree
+	* and compute the length of the path
+	*
+	* Parameters
+	* ----------
+	* node_in : Node*
+	*     Pointer to a node on the tree
+	*
+	* Returns
+	* -------
+	* double
+	*     Length of the path the data point takes along the tree
+	*/
 
 	if (node_in[0].node_type == "exNode") {
 
@@ -281,6 +514,34 @@ double Path::find_path (Node* node_in)
 iForest::iForest (int ntrees_in, int sample_in, int limit_in=0, int exlevel_in=0, int random_seed_in=-1)
 {
 
+       /*
+	* Initialize an iForest object (constructor)
+	*
+	* Parameters
+	* ----------
+	* ntrees_in : int
+	*     Number of trees to train
+	* sample_in : int
+	*     Size of sample to use for tree creation
+	*     It must be >=1 and <=size of dataset used for training.
+	* limit_in : int
+	*     Maximum depth a tree can have
+	*     If value is not given or value<=0 is given, value is set to ceiling of log2(sample_in),
+	*     which is the average tree height for the given size of sample used for tree creation.
+	* exlevel_in : int
+	*     Extension level to use in splitting criterion
+	*     This specifies the degree of freedom in choosing the hyperplanes for splitting the dataset.
+	*     It must be >=0 and <dimension of the dataset.
+	*     If value is not given, value is set to 0 (regular isolation forest).
+	* random_seed_in : int
+	*     Seed for random number generation
+	*     If value is not given or value<0 is given, value is obtained from random seed generator.
+	*
+	* Returns
+	* -------
+	*     N/A
+	*/
+
 	ntrees = ntrees_in;
 	sample = sample_in;
 	limit = limit_in;
@@ -300,6 +561,19 @@ iForest::iForest (int ntrees_in, int sample_in, int limit_in=0, int exlevel_in=0
 iForest::~iForest ()
 {
 
+       /*
+	* Destroy an iForest object (destructor)
+	* This deallocates all memory used in creating the trees.
+	*
+	* Parameters
+	* ----------
+	*     N/A
+	*
+	* Returns
+	* -------
+	*     N/A
+	*/
+
 	for (int i=0; i<ntrees; i++)
 		if (Trees[i].root != NULL) delete_tree_node (Trees[i].root);
 	delete [] Trees;
@@ -308,6 +582,20 @@ iForest::~iForest ()
 
 bool iForest::CheckExtensionLevel ()
 {
+
+       /*
+	* Check the validity of the extension level provided
+	* based on the dimension of the dataset used for training
+	*
+	* Parameters
+	* ----------
+	*     N/A
+	*
+	* Returns
+	* -------
+	* bool
+	*     True if extension level is valid, and False if extension level is not valid
+	*/
 
 	if (exlevel < 0)
 	{
@@ -327,6 +615,20 @@ bool iForest::CheckExtensionLevel ()
 bool iForest::CheckSampleSize ()
 {
 
+       /*
+	* Check the validity of the sample size provided
+	* based on the size of the dataset used for training
+	*
+	* Parameters
+	* ----------
+	*     N/A
+	*
+	* Returns
+	* -------
+	* bool
+	*     True if sample size is valid, and False if sample size is not valid
+	*/
+
 	if (sample < 1)
 	{
 		std::cout << "Subsample size must be an integer between 1 and " << nobjs << "." << std::endl;
@@ -344,6 +646,23 @@ bool iForest::CheckSampleSize ()
 
 void iForest::fit (double* X_in, int nobjs_in, int dim_in)
 {
+
+       /*
+	* Build and train forest of trees
+	*
+	* Parameters
+	* ----------
+	* X_in : double*
+	*     Pointer to dataset to use for training
+	* nobjs_in : int
+	*     Size of dataset
+	* dim_in : int
+	*     Dimension of dataset
+	*
+	* Returns
+	* -------
+	*     N/A
+	*/
 
 	X = X_in;
 	nobjs = nobjs_in;
@@ -376,6 +695,27 @@ void iForest::fit (double* X_in, int nobjs_in, int dim_in)
 void iForest::predict (double* S, double* X_in=NULL, int size_in=0)
 {
 
+       /*
+	* Compute anomaly scores for input dataset
+	* Input dataset could be different from training dataset.
+	*
+	* Parameters
+	* ----------
+	* S : double*
+	*     Pointer to anomaly scores
+	*     The anomaly score for each data point is calculated based on
+	*     the average depth it reaches across all the trees in the forest.
+	* X_in : double*
+	*     Pointer to input dataset
+	*     If input dataset is not given, training dataset will be scored.
+	* size_in : int
+	*     Size of input dataset
+	*
+	* Returns
+	* -------
+	*     N/A
+	*/
+
 	if (X_in == NULL)
 	{
 		X_in = X;
@@ -399,6 +739,19 @@ void iForest::predict (double* S, double* X_in=NULL, int size_in=0)
 
 void iForest::OutputTreeNodes (int iTree_index)
 {
+
+       /*
+	* Output properties of all nodes for a tree
+	*
+	* Parameters
+	* ----------
+	* iTree_index : int
+	*     Index of tree whose node properties are to be output
+	*
+	* Returns
+	* -------
+	*     N/A
+	*/
 
 	output_tree_node (Trees[iTree_index].root, "root");
 

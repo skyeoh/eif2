@@ -1,9 +1,16 @@
+"""Extended Isolation Forest
+
+This is the implementation of the Extended Isolation Forest algorithm for anomaly detection. This extension improves the consistency and reliability of the anomaly scores produced by the standard Isolation Forest algorithm, which can be found in Liu et al.
+
+Our method allows for the slicing of the data to be done using hyperplanes with random slopes resulting in improved score maps. The consistency and reliability of the algorithm are improved significantly using this extension."""
+
 # Cython wrapper for Extended Isolation Forest
 
 # distutils: language = C++
 # distutils: sources  = eif.cxx
 # cython: language_level = 3
 
+__author__ = 'Matias Carrasco Kind, Sahand Hariri & Seng Keat Yeoh'
 import cython
 import numpy as np
 cimport numpy as np
