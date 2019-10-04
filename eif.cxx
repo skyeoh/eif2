@@ -672,7 +672,27 @@ void iForest::fit (double* X_in, int nobjs_in, int dim_in)
 
 	std::vector<double> Xsubset;
 
+#if ENABLE_OPENMP
+#pragma omp parallel private(Xsubset)
+{
+	int istart, iend;
+
+	int threadID = omp_get_thread_num();
+	int numThreads = omp_get_num_threads();
+#pragma omp master
+	{
+		std::cout << "Running OpenMP on " << numThreads << " threads...." << std::endl;
+	}
+
+	istart = threadID*ntrees/numThreads;
+	iend = (threadID+1)*ntrees/numThreads;
+	if (threadID == numThreads-1)
+		iend = ntrees;
+
+	for (int i=istart; i<iend; i++)
+#else
 	for (int i=0; i<ntrees; i++)
+#endif
 	{
 		/* Select a random subset of X_in of size sample_in */
 		RANDOM_ENGINE random_engine (random_seed+i);
@@ -689,6 +709,9 @@ void iForest::fit (double* X_in, int nobjs_in, int dim_in)
 
 		Trees[i].build_tree (&Xsubset[0], sample, 0, limit, dim, random_engine, exlevel);
 	}
+#if ENABLE_OPENMP
+}
+#endif
 
 }
 

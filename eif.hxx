@@ -5,6 +5,9 @@
 #include <random>
 #include <algorithm>
 #include <unordered_set>
+#if ENABLE_OPENMP
+#include <omp.h>
+#endif
 
 #define EULER_CONSTANT 0.5772156649
 
