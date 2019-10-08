@@ -681,7 +681,7 @@ void iForest::fit (double* X_in, int nobjs_in, int dim_in)
 	int numThreads = omp_get_num_threads();
 #pragma omp master
 	{
-		std::cout << "Running OpenMP on " << numThreads << " threads...." << std::endl;
+		std::cout << "Building trees: Running OpenMP on " << numThreads << " threads...." << std::endl;
 	}
 
 	istart = threadID*ntrees/numThreads;
@@ -746,7 +746,28 @@ void iForest::predict (double* S, double* X_in=NULL, int size_in=0)
 	}
 
 	double htemp, havg;
+
+#if ENABLE_OPENMP
+#pragma omp parallel private(htemp, havg)
+{
+	int istart, iend;
+
+	int threadID = omp_get_thread_num();
+	int numThreads = omp_get_num_threads();
+#pragma omp master
+	{
+		std::cout << "Scoring data: Running OpenMP on " << numThreads << " threads...." << std::endl;
+	}
+
+	istart = threadID*size_in/numThreads;
+	iend = (threadID+1)*size_in/numThreads;
+	if (threadID == numThreads-1)
+		iend = size_in;
+
+	for (int i=istart; i<iend; i++)
+#else
 	for (int i=0; i<size_in; i++)
+#endif
 	{
 		htemp = 0.0;
 		for (int j=0; j<ntrees; j++)
@@ -757,6 +778,9 @@ void iForest::predict (double* S, double* X_in=NULL, int size_in=0)
 		havg = htemp/ntrees;
 		S[i] = std::pow(2.0, -havg/c);
 	}
+#if ENABLE_OPENMP
+}
+#endif
 
 }
 
