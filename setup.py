@@ -3,13 +3,21 @@ from distutils.extension import Extension
 from Cython.Distutils import build_ext
 
 import numpy
+import sys
 
 extra_compile_args = ['-Wcpp']
 extra_link_args = []
 define_macros = []
 
-# Enable OpenMP
+# Default mode
 _ENABLE_OPENMP = False
+
+for argv in sys.argv:
+    # Enable OpenMP
+    if argv == '--enable-openmp':
+        _ENABLE_OPENMP = True
+        sys.argv.remove('--enable-openmp')
+
 if _ENABLE_OPENMP:
     extra_compile_args += ['-fopenmp']
     define_macros += [('ENABLE_OPENMP', '1')]
